@@ -24,4 +24,16 @@ describe("handler", () => {
       })
     })
   })
+  describe("group", () => {
+    it("should return a group array if the event doesn't have one", () => {
+      handler({ }, null, (err, state) => {
+          expect(state.group).toEqual([])
+      })
+    })
+    it("should return a group array with any additional members requested added", () => {
+      handler({ group: [ "Jim" ] }, null, (err, state) => {
+          expect(state.group[0].name).toBe("Jim")
+      })
+    })
+  })
 })
