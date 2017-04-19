@@ -10,10 +10,10 @@ exports.handler = function(event, context, callback) {
   response.group = []
   if(event.group) {
     response.group = response.group.concat(event.group.map((item) => {
-        return { name: item }
+        return { name: item, id: shortid.generate() }
     }))
-    console.log(response)
   }
+  // console.log(response)
   callback(null, response)
   //See what type of event
 

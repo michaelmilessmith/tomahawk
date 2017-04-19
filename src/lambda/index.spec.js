@@ -30,10 +30,20 @@ describe("handler", () => {
           expect(state.group).toEqual([])
       })
     })
-    it("should return a group array with any additional members requested added", () => {
+    it("should add any additional members requested to the group", () => {
       handler({ group: [ "Jim" ] }, null, (err, state) => {
           expect(state.group[0].name).toBe("Jim")
       })
+    })
+    it("should add any additional members with a unique id", () => {
+      const ids = []
+      handler({ group: [ "Jim" ] }, null, (err, state) => {
+        ids.push(state.group[0].id)
+      })
+      handler({ group: [ "Jim" ] }, null, (err, state) => {
+        ids.push(state.group[0].id)
+      })
+      expect(ids[0]).not.toBe(ids[1])
     })
   })
 })
