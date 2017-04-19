@@ -1,0 +1,26 @@
+{
+  "name": "tomahawk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaelmilessmith/tomahawk.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michaelmilessmith/tomahawk/issues"
+  },
+  "homepage": "https://github.com/michaelmilessmith/tomahawk#readme",
+  "devDependencies": {
+    "jest": "^19.0.2"
+  },
+  "dependencies": {
+    "shortid": "^2.2.8"
+  }
+}
