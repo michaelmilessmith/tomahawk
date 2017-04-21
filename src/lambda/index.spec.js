@@ -71,10 +71,36 @@ describe("handler", () => {
     })
   })
   describe("list", () => {
-    it("should return an empty list array if one isn't present", (done) => {
+    it("should return an empty list if one isn't present", (done) => {
       handler({ }, context, (err, state) => {
           expect(state.list).toEqual([])
           done()
+      })
+    })
+    it("should add any additional members provided to the group", (done) => {
+      handler({ list: [{ name: "Thing", cost: 5.00 }] }, context, (err, state) => {
+          expect(state.list[0].name).toBe("Thing")
+          expect(state.list[0].cost).toBe(5.00)
+          done()
+      })
+    })
+    it("should return the group containing any members previously added", (done) => {
+      handler({ list: [{ name: "Thing", cost: 5.00 }] }, context, (err, state) => {
+        handler({ id: state.id, list: [{ name: "OtherThing", cost: 10.00 }] }, context, (err, state) => {
+          expect(state.list[0].name).toBe("Thing")
+          expect(state.list[0].cost).toBe(5.00)
+          expect(state.list[1].name).toBe("OtherThing")
+          expect(state.list[1].cost).toBe(10.00)
+          done()
+        })
+      })
+    })
+    it("should add any additional members with a unique id", (done) => {
+      handler({ list: [{ name: "Thing", cost: 5.00 }] }, context, (err, state) => {
+        handler({ id: state.id, list: [{ name: "OtherThing", cost: 10.00 }] }, context, (err, state) => {
+          expect(state.list[0].id).not.toBe(state.list[1].id)
+          done()
+        })
       })
     })
   })
