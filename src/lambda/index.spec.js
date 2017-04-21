@@ -1,9 +1,6 @@
 const handler = require("./index").handler
 
-
-
 jest.mock('aws-sdk', () => (require("../mocks").AWS))
-
 
 const context = { }
 
@@ -13,13 +10,13 @@ describe("handler", () => {
   })
 
   describe("id", () => {
-    it("should return a new id if the event doesn't have one", (done) => {
+    it("should return a new id if one isn't provided", (done) => {
       handler({ }, context, (err, state) => {
           expect(state.id).toBeDefined()
           done()
       })
     })
-    it("should return a unique id", (done) => {
+    it("should be unique", (done) => {
       const ids = []
       const callback = (err, state) => {
         ids.push(state.id)
@@ -31,7 +28,7 @@ describe("handler", () => {
       }
       handler({ }, context, callback)
     })
-    it("should return the same id if the event already has one", (done) => {
+    it("should return the same id that is provided", (done) => {
       let id = ''
       handler({ }, context, (err, state) => {
           id = state.id
@@ -43,16 +40,25 @@ describe("handler", () => {
     })
   })
   describe("group", () => {
-    it("should return an empty group array if the event doesn't have one and there is no id", (done) => {
+    it("should return an empty group if there is no group and id provided", (done) => {
       handler({ }, context, (err, state) => {
           expect(state.group).toEqual([])
           done()
       })
     })
-    it("should add any additional members requested to the group", (done) => {
+    it("should add any additional members provided to the group", (done) => {
       handler({ group: [ "Jim" ] }, context, (err, state) => {
           expect(state.group[0].name).toBe("Jim")
           done()
+      })
+    })
+    it("should return the group containing any members previously added", (done) => {
+      handler({ group: [ "Jim" ] }, context, (err, state) => {
+        handler({ id: state.id, group: [ "James" ] }, context, (err, state) => {
+          expect(state.group[0].name).toBe("Jim" )
+          expect(state.group[1].name).toBe("James" )
+          done()
+        })
       })
     })
     it("should add any additional members with a unique id", (done) => {
