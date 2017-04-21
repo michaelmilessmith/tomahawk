@@ -1,7 +1,18 @@
 const handler = require("./index").handler
+const AWS = require('aws-sdk-mock')
 
 const mockStorage = new Map()
-const context = { storage: mockStorage }
+
+AWS.mock('DynamoDB.DocumentClient', 'put', (params, callback) => {
+  mockStorage.set(params.Item.id, params.Item)
+  callback(null, {});
+});
+
+AWS.mock('DynamoDB.DocumentClient', 'get', (params, callback) => {
+  callback(null, { Item: mockStorage.get(params.Item.id));
+});
+
+const context = { }
 
 describe("handler", () => {
   beforeEach(() => {
