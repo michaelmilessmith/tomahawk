@@ -43,7 +43,7 @@ describe("handler", () => {
     })
   })
   describe("group", () => {
-    it("should return a group array if the event doesn't have one", (done) => {
+    it("should return an empty group array if the event doesn't have one and there is no id", (done) => {
       handler({ }, context, (err, state) => {
           expect(state.group).toEqual([])
           done()
@@ -61,6 +61,14 @@ describe("handler", () => {
           expect(state.group[0].id).not.toBe(state.group[1].id)
           done()
         })
+      })
+    })
+  })
+  describe("list", () => {
+    it("should return an empty list array if one isn't present", (done) => {
+      handler({ }, context, (err, state) => {
+          expect(state.list).toEqual([])
+          done()
       })
     })
   })

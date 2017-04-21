@@ -33,6 +33,12 @@ exports.handler = function(event, context, callback) {
           }
 
           //list
+          response.list = response.list || []
+          if(event.list) {
+            response.list = response.list.concat(event.list.map((item) => {
+                return { name: item.name, id: shortid.generate(), cost: item.cost }
+            }))
+          }
 
           //  console.log(response)
           const putParams = {
