@@ -9,7 +9,7 @@ AWS.mock('DynamoDB.DocumentClient', 'put', (params, callback) => {
 });
 
 AWS.mock('DynamoDB.DocumentClient', 'get', (params, callback) => {
-  callback(null, { Item: mockStorage.get(params.Item.id));
+  callback(null, { Item: mockStorage.get(params.Item.id) })
 });
 
 const context = { }
