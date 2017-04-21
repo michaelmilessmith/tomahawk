@@ -8,9 +8,9 @@ jest.mock('aws-sdk', () => (require("../mocks").AWS))
 const context = { }
 
 describe("handler", () => {
-  // beforeEach(() => {
-  //   mockStorage.clear()
-  // })
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
 
   describe("id", () => {
     it("should return a new id if the event doesn't have one", (done) => {
