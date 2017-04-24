@@ -10,28 +10,28 @@ const reducer = function(state, action){
       return Object.assign({}, state, {
         group: new Map([...state.group, [payload.id, { id: payload.id, name: payload.name }]])
       })
+    case "CHANGE_NAME":
+      return Object.assign({}, state, { name: payload.name })
   }
   return state
 }
 
-const saveAndReply = (response, item, callback) => {
-  const newVersion = shortid.generate()
+const innerReply = (response, item, callback) => {
   const putParams = {
     TableName: "CurrentLists",
-    Item: Object.assign({}, item, { version: newVersion })
+    Item: item
   }
   const putOldParams = {
     TableName: "OldLists",
-    Item: Object.assign({}, item, { version: newVersion, id: newVersion })
+    Item: Object.assign({}, item, { id: item.id })
   }
   docClient.put(putParams, (err, data) => {
     if (err) {
         console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
     } else {
-        // console.log("Added item:", JSON.stringify(data, null, 2));
       docClient.put(putOldParams, (err, data) => {
         if (err) {
-            console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+          console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
         } else {
           callback(null, response)
         }
@@ -40,14 +40,17 @@ const saveAndReply = (response, item, callback) => {
   })
 }
 
-const saveAndSendDelta = (previous, current, actions, callback) => {
+const reply = (previous, current, actions, callback) => {
+  const newVersion = shortid.generate()
   if(actions){
     const latest = actions.reduce(reducer, current)
-    const delta = jdp.diff(previous, latest)
-    saveAndReply(delta, latest, callback)
+    const newItem = Object.assign(latest, { id: newVersion, version: newVersion })
+    const delta = jdp.diff(previous, newItem)
+    innerReply(delta, newItem, callback)
   } else {
-    const delta = jdp.diff(previous, current)
-    saveAndReply(delta, current, callback)
+    const newItem = Object.assign(current, { id: newVersion, version: newVersion })
+    const delta = jdp.diff(previous, newItem)
+    innerReply(delta, newItem, callback)
     //callback(null, delta)
   }
 }
@@ -55,6 +58,7 @@ const saveAndSendDelta = (previous, current, actions, callback) => {
 const init = () => ({
   id: shortid.generate(),
   version: shortid.generate(),
+  name: "",
   group: new Map(),
   list: []
 })
@@ -67,18 +71,17 @@ const init = () => ({
 // - more production features, cloudwatch, aws params
 exports.handler = function(event, context, callback) {
   const { id, actions, version } = event
-  //id
+
   if(id) {
     const getCurrentParams = {
       TableName: "CurrentLists",
-      Key: { id: id }
+      Key: { id }
     }
     docClient.get(getCurrentParams, (err, data) => {
       if (err) {
           console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
       } else {
-        // console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
-        if(data.Item){
+        if(data.Item) {
           const current = Object.assign({}, data.Item)
 
           if(version) {
@@ -90,18 +93,18 @@ exports.handler = function(event, context, callback) {
               if (err) {
                   console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
               } else {
-                saveAndSendDelta(data.Item, current, actions, callback)
+                reply(data.Item, current, actions, callback)
               }
             })
           } else {
-            saveAndSendDelta({}, current, actions, callback)
+            reply({}, current, actions, callback)
           }
         } else {
-          saveAndSendDelta({}, init(), actions, callback)
+          reply({}, init(), actions, callback)
         }
       }
     })
   } else {
-    saveAndSendDelta({}, init(), actions, callback)
+    reply({}, init(), actions, callback)
   }
 }

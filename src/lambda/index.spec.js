@@ -3,6 +3,7 @@ const jdp = require("jsondiffpatch")
 
 jest.mock('aws-sdk', () => (require("../mocks").AWS))
 
+const AWS = require("aws-sdk")
 const context = { }
 
 const helper = (state, actions, callback) => {
@@ -11,8 +12,9 @@ const helper = (state, actions, callback) => {
   request.actions = actions || undefined
   request.version = state.version || undefined
   handler(request, context, (err, delta) => {
-    jdp.patch(state, delta)
-    callback(err, state)
+    const send = Object.assign({}, state)
+    jdp.patch(send, delta)
+    callback(err, send)
   })
 }
 
@@ -22,6 +24,7 @@ const helperNoAction =  (state, callback) => {
 
 describe("handler", () => {
   beforeEach(() => {
+    AWS.mockStorage.clear()
     jest.resetAllMocks()
   })
 
@@ -47,37 +50,42 @@ describe("handler", () => {
       helperNoAction({ }, (err, state) => {
         const id = state.id
         helperNoAction({ id }, (err, state) => {
-          console.log(state)
             expect(state.id).toBe(id)
             done()
         })
       })
     })
   })
-  describe("name", () => {
+  describe("name actions", () => {
+    const changeName = (name) => ({
+      type: "CHANGE_NAME",
+      payload: {
+        name
+      }
+    })
     it("Should include a name provided", (done) => {
-      handler({ name: "My List"}, context, (err, state) => {
+      helper({ }, [changeName("My List")], (err, state) => {
           expect(state.name).toBe("My List")
           done()
       })
     })
     it("Should include an empty string for name if it is not provided", (done) => {
-      handler({ }, context, (err, state) => {
+      helperNoAction({ }, (err, state) => {
           expect(state.name).toBe("")
           done()
       })
     })
     it("Should overwrite the name if a new one is provided", (done) => {
-      handler({ name: "My List"}, context, (err, state) => {
-        handler({ id: state.id, name: "Other List"}, context, (err, state) => {
+      helper({ }, [changeName("My List")], (err, state) => {
+        helper(state, [changeName("Other List")], (err, state) => {
           expect(state.name).toBe("Other List")
           done()
         })
       })
     })
     it("Should return the name previously provided on later calls", (done) => {
-      handler({ name: "My List"}, context, (err, state) => {
-        handler({ id: state.id }, context, (err, state) => {
+      helper({ }, [changeName("My List")], (err, state) => {
+        helperNoAction(state, (err, state) => {
           expect(state.name).toBe("My List")
           done()
         })
