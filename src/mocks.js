@@ -3,12 +3,19 @@ const mockStorage = new Map()
 
 //functions are not accurate representation but work for my needs
 function DocumentClient() {
+  const initTable = (tableName) =>{
+    if(!mockStorage.has(tableName)){
+      mockStorage.set(tableName, new Map())
+    }
+  }
   this.put = (params, callback) => {
-    mockStorage.set(params.Item.id, params.Item)
+    initTable(params.TableName)
+    mockStorage.get(params.TableName).set(params.Item.id, params.Item)
     callback(null, {})
   }
   this.get = (params, callback) => {
-    const item = mockStorage.get(params.Key.id)
+    initTable(params.TableName)
+    const item = mockStorage.get(params.TableName).get(params.Key.id)
     if(item){
       callback(null, { Item: item })
     }
