@@ -96,7 +96,7 @@ describe("handler", () => {
         })
       })
     })
-    it("should return the list containing any members previously added", (done) => {
+    it("should return the list containing any items previously added", (done) => {
       handler({ group: [ "Jim" ] }, context, (err, state) => {
         const memberId = state.group.keys().next().value
         handler({ id: state.id, list: [{ name: "Thing", cost: 5.00, memberId }] }, context, (err, state) => {

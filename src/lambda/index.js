@@ -2,6 +2,12 @@ const AWS = require("aws-sdk")
 const docClient = new AWS.DynamoDB.DocumentClient()
 const shortid = require('shortid');
 
+//ToDo
+// - error handling callbacks
+// - update functionality
+// - delete functionality
+// - improve data structure
+// - more production features, cloudwatch, aws params
 exports.handler = function(event, context, callback) {
   const response = {}
 
