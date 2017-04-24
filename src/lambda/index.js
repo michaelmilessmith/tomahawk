@@ -14,6 +14,12 @@ const reducer = function(state, action){
       })
     case "CHANGE_NAME":
       return Object.assign({}, state, { name: payload.name })
+    case "ADD_ITEM":
+      if(state.group.has(payload.memberId)){
+        return Object.assign({}, state, {
+          list: state.list.concat([Object.assign({}, payload, { id: shortid.generate() })])
+        })
+      }
   }
   return state
 }
