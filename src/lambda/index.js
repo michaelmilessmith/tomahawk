@@ -22,16 +22,21 @@ const reducer = function(state, action){
       }
   }
   return state
-}
+}  
 
-const innerReply = (response, item, callback) => {
+const reply = (previous, current, actions, callback) => {
+  const updatedVersion = Object.assign(
+    actions ? actions.reduce(reducer, current) : current,
+    { version: shortid.generate() }
+  )
+  const delta = jdp.diff(previous, updatedVersion)
   const putParams = {
     TableName: "CurrentLists",
-    Item: item
+    Item: updatedVersion
   }
   const putOldParams = {
     TableName: "OldLists",
-    Item: Object.assign({}, item, { id: item.version })
+    Item: Object.assign({}, updatedVersion, { id: updatedVersion.version })
   }
   docClient.put(putParams, (err, data) => {
     if (err) {
@@ -41,26 +46,11 @@ const innerReply = (response, item, callback) => {
         if (err) {
           console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
         } else {
-          callback(null, response)
+          callback(null, delta)
         }
       })
     }
   })
-}
-
-const reply = (previous, current, actions, callback) => {
-  const newVersion = shortid.generate()
-  if(actions){
-    const latest = actions.reduce(reducer, current)
-    const newItem = Object.assign(latest, { version: newVersion })
-    const delta = jdp.diff(previous, newItem)
-    innerReply(delta, newItem, callback)
-  } else {
-    const newItem = Object.assign(current, { version: newVersion })
-    const delta = jdp.diff(previous, newItem)
-    innerReply(delta, newItem, callback)
-    //callback(null, delta)
-  }
 }
 
 const init = () => ({
