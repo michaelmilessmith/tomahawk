@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.44.0",
+    "jsondiffpatch": "^0.2.4",
     "shortid": "^2.2.8"
   }
 }

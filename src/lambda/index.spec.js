@@ -1,8 +1,21 @@
 const handler = require("./index").handler
+const jdp = require("jsondiffpatch")
 
 jest.mock('aws-sdk', () => (require("../mocks").AWS))
 
 const context = { }
+
+const helper = (state, actions, callback) => {
+  const request = {}
+  request.id = state.id || undefined
+  request.actions = actions || undefined
+  request.version = state.version || undefined
+  handler(request, context, (err, state) => {
+    const response = {}
+    jdp.patch(response, state)
+    callback(response)
+  })
+}
 
 describe("handler", () => {
   beforeEach(() => {
@@ -11,7 +24,7 @@ describe("handler", () => {
 
   describe("id", () => {
     it("should return a new id if one isn't provided", (done) => {
-      handler({ }, context, (err, state) => {
+      helper({}, undefined, (state) => {
           expect(state.id).toBeDefined()
           done()
       })
@@ -29,11 +42,10 @@ describe("handler", () => {
       handler({ }, context, callback)
     })
     it("should return the same id that is provided", (done) => {
-      let id = ''
       handler({ }, context, (err, state) => {
-          id = state.id
+          const id = state.id
           handler({ id }, context, (err, state) => {
-              expect(state.id).toBe(id)
+              expect(state.id).toEqual(id)
               done()
           })
       })
