@@ -39,6 +39,36 @@ describe("handler", () => {
       })
     })
   })
+  describe("name", () => {
+    it("Should include a name provided", (done) => {
+      handler({ name: "My List"}, context, (err, state) => {
+          expect(state.name).toBe("My List")
+          done()
+      })
+    })
+    it("Should include an empty string for name if it is not provided", (done) => {
+      handler({ }, context, (err, state) => {
+          expect(state.name).toBe("")
+          done()
+      })
+    })
+    it("Should overwrite the name if a new one is provided", (done) => {
+      handler({ name: "My List"}, context, (err, state) => {
+        handler({ id: state.id, name: "Other List"}, context, (err, state) => {
+          expect(state.name).toBe("Other List")
+          done()
+        })
+      })
+    })
+    it("Should return the name previously provided on later calls", (done) => {
+      handler({ name: "My List"}, context, (err, state) => {
+        handler({ id: state.id }, context, (err, state) => {
+          expect(state.name).toBe("My List")
+          done()
+        })
+      })
+    })
+  })
   describe("group", () => {
     it("should return an empty group if there is no group and id provided", (done) => {
       handler({ }, context, (err, state) => {

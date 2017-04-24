@@ -29,6 +29,9 @@ exports.handler = function(event, context, callback) {
         response.id = event.id
       }
 
+      //name
+      response.name = event.name || response.name || ""
+
       //group
       response.group = response.group || new Map()
       if(event.group) {
