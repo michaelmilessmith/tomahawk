@@ -29,7 +29,7 @@ const saveAndReply = (response, item, callback) => {
         console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
     } else {
         // console.log("Added item:", JSON.stringify(data, null, 2));
-      docClient.put(putParams, (err, data) => {
+      docClient.put(putOldParams, (err, data) => {
         if (err) {
             console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
         } else {
@@ -47,16 +47,17 @@ const saveAndSendDelta = (previous, current, actions, callback) => {
     saveAndReply(delta, latest, callback)
   } else {
     const delta = jdp.diff(previous, current)
-    callback(null, delta)
+    saveAndReply(delta, current, callback)
+    //callback(null, delta)
   }
 }
 
-const init = {
+const init = () => ({
   id: shortid.generate(),
   version: shortid.generate(),
   group: new Map(),
   list: []
-}
+})
 
 //ToDo
 // - error handling callbacks
@@ -70,7 +71,7 @@ exports.handler = function(event, context, callback) {
   if(id) {
     const getCurrentParams = {
       TableName: "CurrentLists",
-      Key: { id: event.id }
+      Key: { id: id }
     }
     docClient.get(getCurrentParams, (err, data) => {
       if (err) {
@@ -96,11 +97,11 @@ exports.handler = function(event, context, callback) {
             saveAndSendDelta({}, current, actions, callback)
           }
         } else {
-          saveAndSendDelta({}, init, actions, callback)
+          saveAndSendDelta({}, init(), actions, callback)
         }
       }
     })
   } else {
-    saveAndSendDelta({}, init, actions, callback)
+    saveAndSendDelta({}, init(), actions, callback)
   }
 }

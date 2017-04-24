@@ -14,6 +14,7 @@ function DocumentClient() {
     callback(null, {})
   }
   this.get = (params, callback) => {
+
     initTable(params.TableName)
     const item = mockStorage.get(params.TableName).get(params.Key.id)
     if(item){

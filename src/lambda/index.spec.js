@@ -10,11 +10,14 @@ const helper = (state, actions, callback) => {
   request.id = state.id || undefined
   request.actions = actions || undefined
   request.version = state.version || undefined
-  handler(request, context, (err, state) => {
-    const response = {}
-    jdp.patch(response, state)
-    callback(response)
+  handler(request, context, (err, delta) => {
+    jdp.patch(state, delta)
+    callback(err, state)
   })
+}
+
+const helperNoAction =  (state, callback) => {
+  helper(state, undefined, callback)
 }
 
 describe("handler", () => {
@@ -24,30 +27,30 @@ describe("handler", () => {
 
   describe("id", () => {
     it("should return a new id if one isn't provided", (done) => {
-      helper({}, undefined, (state) => {
+      helperNoAction({}, (err, state) => {
           expect(state.id).toBeDefined()
           done()
       })
     })
     it("should be unique", (done) => {
       const ids = []
-      const callback = (err, state) => {
+      helperNoAction({ }, (err, state) => {
         ids.push(state.id)
-        handler({ }, context, (err, state) => {
+        helperNoAction({ }, (err, state) => {
           ids.push(state.id)
           expect(ids[0]).not.toBe(ids[1])
           done()
         })
-      }
-      handler({ }, context, callback)
+      })
     })
     it("should return the same id that is provided", (done) => {
-      handler({ }, context, (err, state) => {
-          const id = state.id
-          handler({ id }, context, (err, state) => {
-              expect(state.id).toEqual(id)
-              done()
-          })
+      helperNoAction({ }, (err, state) => {
+        const id = state.id
+        helperNoAction({ id }, (err, state) => {
+          console.log(state)
+            expect(state.id).toBe(id)
+            done()
+        })
       })
     })
   })
