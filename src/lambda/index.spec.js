@@ -37,7 +37,7 @@ describe("handler", () => {
     })
     it("should be unique", (done) => {
       const ids = []
-      helperNoAction({ }, (err, state) => {
+      helperNoAction({}, (err, state) => {
         ids.push(state.id)
         helperNoAction({ }, (err, state) => {
           ids.push(state.id)
@@ -47,11 +47,11 @@ describe("handler", () => {
       })
     })
     it("should return the same id that is provided", (done) => {
-      helperNoAction({ }, (err, state) => {
+      helperNoAction({}, (err, state) => {
         const id = state.id
-        helperNoAction({ id }, (err, state) => {
-            expect(state.id).toBe(id)
-            done()
+        helperNoAction(state, (err, state) => {
+          expect(state.id).toBe(id)
+          done()
         })
       })
     })
@@ -93,32 +93,38 @@ describe("handler", () => {
     })
   })
   describe("group", () => {
+    const addGroupMember = (name) => ({
+      type: "ADD_GROUP_MEMBER",
+      payload: {
+        name
+      }
+    })
     it("should return an empty group if there is no group and id provided", (done) => {
-      handler({ }, context, (err, state) => {
-          expect(state.group).toEqual(new Map())
-          done()
+      helperNoAction({}, (err, state) => {
+        expect(state.group).toEqual(new Map())
+        done()
       })
     })
     it("should add any additional members provided to the group", (done) => {
-      handler({ group: [ "Jim" ] }, context, (err, state) => {
+      helper({}, [addGroupMember("Jim")], (err, state) => {
           const groupIter = state.group.values();
           expect(groupIter.next().value.name).toBe("Jim")
           done()
       })
     })
     it("should return the group containing any members previously added", (done) => {
-      handler({ group: [ "Jim" ] }, context, (err, state) => {
-        handler({ id: state.id, group: [ "James" ] }, context, (err, state) => {
+      helper({}, [addGroupMember("Jim")], (err, state) => {
+        helper(state, [addGroupMember("James")], (err, state) => {
           const groupIter = state.group.values();
           expect(groupIter.next().value.name).toBe("Jim" )
-          expect(groupIter.next().value.name).toBe("James" )
+          expect(groupIter.next().value.name).toBe("James")
           done()
         })
       })
     })
     it("should add any additional members with a unique id", (done) => {
-      handler({ group: [ "Jim" ] }, context, (err, state) => {
-        handler({ id: state.id, group: [ "Jim" ] }, context, (err, state) => {
+      helper({}, [addGroupMember("Jim")], (err, state) => {
+        helper(state, [addGroupMember("Jim")], (err, state) => {
           const keys = state.group.keys();
           expect(keys.next().value).not.toBe(keys.next().value)
           done()

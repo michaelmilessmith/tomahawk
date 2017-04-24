@@ -7,8 +7,10 @@ const reducer = function(state, action){
   const { payload } = action
   switch(action.type){
     case "ADD_GROUP_MEMBER":
+      const id = shortid.generate()
+      state.group.set(id, { id, name: payload.name })
       return Object.assign({}, state, {
-        group: new Map([...state.group, [payload.id, { id: payload.id, name: payload.name }]])
+        group: new Map([...state.group])
       })
     case "CHANGE_NAME":
       return Object.assign({}, state, { name: payload.name })
@@ -23,7 +25,7 @@ const innerReply = (response, item, callback) => {
   }
   const putOldParams = {
     TableName: "OldLists",
-    Item: Object.assign({}, item, { id: item.id })
+    Item: Object.assign({}, item, { id: item.version })
   }
   docClient.put(putParams, (err, data) => {
     if (err) {
@@ -44,11 +46,11 @@ const reply = (previous, current, actions, callback) => {
   const newVersion = shortid.generate()
   if(actions){
     const latest = actions.reduce(reducer, current)
-    const newItem = Object.assign(latest, { id: newVersion, version: newVersion })
+    const newItem = Object.assign(latest, { version: newVersion })
     const delta = jdp.diff(previous, newItem)
     innerReply(delta, newItem, callback)
   } else {
-    const newItem = Object.assign(current, { id: newVersion, version: newVersion })
+    const newItem = Object.assign(current, { version: newVersion })
     const delta = jdp.diff(previous, newItem)
     innerReply(delta, newItem, callback)
     //callback(null, delta)
