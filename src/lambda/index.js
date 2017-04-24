@@ -25,17 +25,19 @@ exports.handler = function(event, context, callback) {
           //group
           // console.log(response)
 
-          response.group = response.group || []
+          response.group = response.group || new Map()
           if(event.group) {
-            response.group = response.group.concat(event.group.map((item) => {
-                return { name: item, id: shortid.generate() }
-            }))
+            for(let i = 0, length = event.group.length; i < length; i++){
+              const newItem = { name: event.group[i], id: shortid.generate() }
+              response.group.set(newItem.id, newItem)
+            }
           }
 
           //list
           response.list = response.list || []
           if(event.list) {
-            response.list = response.list.concat(event.list.map((item) => {
+            const toAdd = event.list.filter((item) => response.group.has(item.memberId))
+            response.list = response.list.concat(toAdd.map((item) => {
                 return { name: item.name, id: shortid.generate(), cost: item.cost }
             }))
           }

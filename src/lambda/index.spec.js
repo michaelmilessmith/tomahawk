@@ -42,21 +42,23 @@ describe("handler", () => {
   describe("group", () => {
     it("should return an empty group if there is no group and id provided", (done) => {
       handler({ }, context, (err, state) => {
-          expect(state.group).toEqual([])
+          expect(state.group).toEqual(new Map())
           done()
       })
     })
     it("should add any additional members provided to the group", (done) => {
       handler({ group: [ "Jim" ] }, context, (err, state) => {
-          expect(state.group[0].name).toBe("Jim")
+          const groupIter = state.group.values();
+          expect(groupIter.next().value.name).toBe("Jim")
           done()
       })
     })
     it("should return the group containing any members previously added", (done) => {
       handler({ group: [ "Jim" ] }, context, (err, state) => {
         handler({ id: state.id, group: [ "James" ] }, context, (err, state) => {
-          expect(state.group[0].name).toBe("Jim" )
-          expect(state.group[1].name).toBe("James" )
+          const groupIter = state.group.values();
+          expect(groupIter.next().value.name).toBe("Jim" )
+          expect(groupIter.next().value.name).toBe("James" )
           done()
         })
       })
@@ -64,7 +66,8 @@ describe("handler", () => {
     it("should add any additional members with a unique id", (done) => {
       handler({ group: [ "Jim" ] }, context, (err, state) => {
         handler({ id: state.id, group: [ "Jim" ] }, context, (err, state) => {
-          expect(state.group[0].id).not.toBe(state.group[1].id)
+          const keys = state.group.keys();
+          expect(keys.next().value).not.toBe(keys.next().value)
           done()
         })
       })
@@ -77,29 +80,44 @@ describe("handler", () => {
           done()
       })
     })
-    it("should add any additional members provided to the group", (done) => {
-      handler({ list: [{ name: "Thing", cost: 5.00 }] }, context, (err, state) => {
-          expect(state.list[0].name).toBe("Thing")
-          expect(state.list[0].cost).toBe(5.00)
+    it("should not allow entries to be added to the list without a group member id", (done) => {
+      handler( { group: [ "Jim" ], list: [{ name: "Thing", cost: 5.00 }] }, context, (err, state) => {
+          expect(state.list).toEqual([])
           done()
       })
     })
-    it("should return the group containing any members previously added", (done) => {
-      handler({ list: [{ name: "Thing", cost: 5.00 }] }, context, (err, state) => {
-        handler({ id: state.id, list: [{ name: "OtherThing", cost: 10.00 }] }, context, (err, state) => {
+    it("should add any additional items provided to the list", (done) => {
+      handler({ group: [ "Jim" ] }, context, (err, state) => {
+        const memberId = state.group.keys().next().value
+        handler({ id: state.id, list: [{ name: "Thing", cost: 5.00, memberId }] }, context, (err, state) => {
           expect(state.list[0].name).toBe("Thing")
           expect(state.list[0].cost).toBe(5.00)
-          expect(state.list[1].name).toBe("OtherThing")
-          expect(state.list[1].cost).toBe(10.00)
           done()
         })
       })
     })
-    it("should add any additional members with a unique id", (done) => {
-      handler({ list: [{ name: "Thing", cost: 5.00 }] }, context, (err, state) => {
-        handler({ id: state.id, list: [{ name: "OtherThing", cost: 10.00 }] }, context, (err, state) => {
-          expect(state.list[0].id).not.toBe(state.list[1].id)
-          done()
+    it("should return the list containing any members previously added", (done) => {
+      handler({ group: [ "Jim" ] }, context, (err, state) => {
+        const memberId = state.group.keys().next().value
+        handler({ id: state.id, list: [{ name: "Thing", cost: 5.00, memberId }] }, context, (err, state) => {
+          handler({ id: state.id, list: [{ name: "OtherThing", cost: 10.00, memberId }] }, context, (err, state) => {
+            expect(state.list[0].name).toBe("Thing")
+            expect(state.list[0].cost).toBe(5.00)
+            expect(state.list[1].name).toBe("OtherThing")
+            expect(state.list[1].cost).toBe(10.00)
+            done()
+          })
+        })
+      })
+    })
+    it("should add any additional items with a unique id", (done) => {
+      handler({ group: [ "Jim" ] }, context, (err, state) => {
+        const memberId = state.group.keys().next().value
+        handler({ id: state.id, list: [{ name: "Thing", cost: 5.00, memberId }] }, context, (err, state) => {
+          handler({ id: state.id, list: [{ name: "OtherThing", cost: 10.00, memberId }] }, context, (err, state) => {
+            expect(state.list[0].id).not.toBe(state.list[1].id)
+            done()
+          })
         })
       })
     })
